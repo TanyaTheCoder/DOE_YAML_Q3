@@ -1,38 +1,31 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-name: CI
-
-on:
-  push:
-    branches:
+trigger:
+  branches:
+    include:
       - master
 
+pool:
+  vmImage: 'ubuntu-latest'
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+- job: Build
+  displayName: 'Build and Test'
+  steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '12.x'
+    displayName: 'Install Node.js'
 
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+  - script: |
+      npm install
+      npm run build
+    displayName: 'Install dependencies and build'
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '12.x'
+  - script: |
+      npm run test
+    displayName: 'Run Tests'
 
-    - name: Install Dependencies and Build
-      run: |
-        npm install
-        npm run build
-
-    - name: Run Tests
-      run: npm run test
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: build-artifact
-        path: dist
+  - task: PublishPipelineArtifact@1
+    inputs:
+      targetPath: '$(Build.ArtifactStagingDirectory)/dist'
+      artifact: 'build-artifact'
+      publishLocation: 'pipeline'
